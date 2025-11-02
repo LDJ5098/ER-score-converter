@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이터널리턴 점수 계산기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-white via-cyan-50 to-blue-50 p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        <!-- 헤더 -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold mb-2 text-gray-800">실험체 점수 계산기</h1>
+            <p class="text-gray-600 text-sm md:text-base">실험체 숙련도를 계산해보세요</p>
+        </div>
+
+        <!-- 안내 -->
+        <div class="mb-6 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+            <h3 class="text-sm font-semibold mb-2 text-gray-800">사용 방법</h3>
+            <ul class="space-y-1 text-gray-700 text-xs">
+                <li>• <strong>평균 유저 데이터:</strong> 해당하는 실험체의 본인 현재 티어를 기준으로한 평균 통계를 입력하세요</li>
+                <li>• <strong>플레이어 데이터:</strong> 분석하고 싶은 유저의 실험체 데이터를 입력하세요</li>
+                <li>• <strong>가중치 설정:</strong> 본인이 중요하게 생각하는 부분의 가중치를 더 높게 주세요. 미입력시 20%로 모두 균등하게 계산됩니다</li>
+                <li>• 모든 항목을 입력해야 점수 계산이 가능합니다</li>
+                <li>• 점수는 평균 대비 상대적 성능을 나타내며, 100점 이상이 평균을 상회하는 수준입니다</li>
+            </ul>
+        </div>
+
+        <!-- 입력 테이블 -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-cyan-50 border-b border-gray-200">
+                            <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">항목</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold text-cyan-700">평균 유저</th>
+                            <th class="px-4 py-3 text-center text-sm font-semibold text-blue-700">플레이어</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-4 py-3 text-sm text-gray-700 font-medium">승률 (%)</td>
+                            <td class="px-4 py-3">
+                                <input type="number" step="0.1" id="avgWinRate" placeholder="16.2" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm text-center">
+                            </td>
+                            <td class="px-4 py-3 bg-gray-50">
+                                <div class="text-sm text-gray-500 text-center">자동 계산</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 text-sm text-gray-700 font-medium">TOP3 비율 (%)</td>
+                            <td class="px-4 py-3">
+                                <input type="number" step="0.1" id="avgTop3Rate" placeholder="42.6"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm text-center">
+                            </td>
+                            <td class="px-4 py-3 bg-gray-50">
+                                <div class="text-sm text-gray-500 text-center">자동 계산</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 text-sm text-gray-700 font-medium">RP 획득 (판당)</td>
+                            <td class="px-4 py-3">
+                                <input type="number" step="0.1" id="avgRP" placeholder="17.8"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm text-center">
+                            </td>
+                            <td class="px-4 py-3 bg-gray-50">
+                                <div class="text-sm text-gray-500 text-center">자동 계산</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 text-sm text-gray-700 font-medium">평균 순위</td>
+                            <td class="px-4 py-3">
+                                <input type="number" step="0.1" id="avgRank" placeholder="4.2"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm text-center">
+                            </td>
+                            <td class="px-4 py-3">
+                                <input type="number" step="0.1" id="playerAvgRank" placeholder="3.8"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-center">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-3 text-sm text-gray-700 font-medium">평균 킬</td>
+                            <td class="px-4 py-3">
+                                <input type="number" step="0.01" id="avgKills" placeholder="3.95"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm text-center">
+                            </td>
+                            <td class="px-4 py-3">
+                                <input type="number" step="0.01" id="playerAvgKills" placeholder="4.11"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-center">
+                            </td>
+                        </tr>
+                        <tr class="bg-blue-50">
+                            <td class="px-4 py-3 text-sm text-gray-700 font-medium">총 판수</td>
+                            <td class="px-4 py-3 bg-gray-50">
+                                <div class="text-sm text-gray-500 text-center">-</div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <input type="number" id="playerTotalGames" placeholder="28"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-center">
+                            </td>
+                        </tr>
+                        <tr class="bg-blue-50">
+                            <td class="px-4 py-3 text-sm text-gray-700 font-medium">승리 횟수</td>
+                            <td class="px-4 py-3 bg-gray-50">
+                                <div class="text-sm text-gray-500 text-center">-</div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <input type="number" id="playerWins" placeholder="6"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-center">
+                            </td>
+                        </tr>
+                        <tr class="bg-blue-50">
+                            <td class="px-4 py-3 text-sm text-gray-700 font-medium">TOP3 횟수</td>
+                            <td class="px-4 py-3 bg-gray-50">
+                                <div class="text-sm text-gray-500 text-center">-</div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <input type="number" id="playerTop3" placeholder="12"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-center">
+                            </td>
+                        </tr>
+                        <tr class="bg-blue-50">
+                            <td class="px-4 py-3 text-sm text-gray-700 font-medium">총 획득 RP</td>
+                            <td class="px-4 py-3 bg-gray-50">
+                                <div class="text-sm text-gray-500 text-center">-</div>
+                            </td>
+                            <td class="px-4 py-3">
+                                <input type="number" id="playerTotalRP" placeholder="990"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-center">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 가중치 설정 테이블 -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
+            <div class="px-4 py-3 bg-purple-50 border-b border-gray-200">
+                <h3 class="text-sm font-semibold text-gray-800">가중치 설정 (%)</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-2 text-center text-xs font-medium text-gray-600">승률</th>
+                            <th class="px-4 py-2 text-center text-xs font-medium text-gray-600">TOP3</th>
+                            <th class="px-4 py-2 text-center text-xs font-medium text-gray-600">RP</th>
+                            <th class="px-4 py-2 text-center text-xs font-medium text-gray-600">평균순위</th>
+                            <th class="px-4 py-2 text-center text-xs font-medium text-gray-600">평균킬</th>
+                            <th class="px-4 py-2 text-center text-xs font-medium text-purple-700">합계</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="px-2 py-3">
+                                <input type="number" step="1" id="weightWin" value="20" min="0" max="100" oninput="updateWeightTotal()"
+                                    class="w-full px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm text-center">
+                            </td>
+                            <td class="px-2 py-3">
+                                <input type="number" step="1" id="weightTop3" value="20" min="0" max="100" oninput="updateWeightTotal()"
+                                    class="w-full px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm text-center">
+                            </td>
+                            <td class="px-2 py-3">
+                                <input type="number" step="1" id="weightRP" value="20" min="0" max="100" oninput="updateWeightTotal()"
+                                    class="w-full px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm text-center">
+                            </td>
+                            <td class="px-2 py-3">
+                                <input type="number" step="1" id="weightRank" value="20" min="0" max="100" oninput="updateWeightTotal()"
+                                    class="w-full px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm text-center">
+                            </td>
+                            <td class="px-2 py-3">
+                                <input type="number" step="1" id="weightKill" value="20" min="0" max="100" oninput="updateWeightTotal()"
+                                    class="w-full px-2 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm text-center">
+                            </td>
+                            <td class="px-2 py-3">
+                                <div id="weightTotal" class="text-center font-bold text-lg"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="weightWarning" class="hidden px-4 py-2 bg-red-50 border-t border-red-200">
+                <p class="text-red-600 text-xs text-center">⚠️ 가중치 합계가 100%가 되어야 합니다!</p>
+            </div>
+        </div>
+
+        <!-- 계산 버튼 -->
+        <button onclick="calculateScore()" 
+            class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 mb-8">
+            점수 계산하기
+        </button>
+
+        <!-- 결과 영역 -->
+        <div id="resultSection" class="hidden space-y-6">
+            <!-- 종합 평가 -->
+            <div class="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-lg p-6 shadow-sm border border-cyan-200">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800">종합 평가</h3>
+                        <p id="gradeComment" class="text-sm text-gray-600"></p>
+                    </div>
+                    <div class="text-right">
+                        <div id="gradeText" class="text-5xl font-bold"></div>
+                        <div id="totalScoreText" class="text-2xl font-bold text-gray-800"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 상세 정보 -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">기본 정보</h3>
+                    <div id="basicInfo" class="space-y-2 text-sm text-gray-700"></div>
+                </div>
+                <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-800">상세 점수</h3>
+                    <div id="detailScores" class="space-y-2 text-sm"></div>
+                </div>
+            </div>
+
+            <!-- 그래프 -->
+            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                <h3 class="text-lg font-semibold mb-4 text-gray-800">점수 비교 분석</h3>
+                <canvas id="scoreChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let myChart = null;
+
+        // 가중치 합계 업데이트
+        function updateWeightTotal() {
+            const weightWin = parseFloat(document.getElementById('weightWin').value) || 0;
+            const weightTop3 = parseFloat(document.getElementById('weightTop3').value) || 0;
+            const weightRP = parseFloat(document.getElementById('weightRP').value) || 0;
+            const weightRank = parseFloat(document.getElementById('weightRank').value) || 0;
+            const weightKill = parseFloat(document.getElementById('weightKill').value) || 0;
+            
+            const total = weightWin + weightTop3 + weightRP + weightRank + weightKill;
+            const totalElement = document.getElementById('weightTotal');
+            const warningElement = document.getElementById('weightWarning');
+            
+            totalElement.textContent = total + '%';
+            
+            if (total === 100) {
+                totalElement.className = 'text-center font-bold text-lg text-green-600';
+                warningElement.classList.add('hidden');
+            } else {
+                totalElement.className = 'text-center font-bold text-lg text-red-600';
+                warningElement.classList.remove('hidden');
+            }
+        }
+
+        // 페이지 로드 시 가중치 합계 초기화
+        window.onload = function() {
+            updateWeightTotal();
+        };
+
+        function getGrade(score) {
+            if (score >= 160) return { grade: 'SS', color: 'text-indigo-600' };
+            if (score >= 130) return { grade: 'S', color: 'text-blue-600' };
+            if (score >= 110) return { grade: 'A', color: 'text-cyan-600' };
+            if (score >= 90) return { grade: 'B', color: 'text-teal-600' };
+            if (score >= 70) return { grade: 'C', color: 'text-yellow-600' };
+            if (score >= 45) return { grade: 'D', color: 'text-orange-600' };
+            return { grade: 'F', color: 'text-red-600' };
+        }
+
+        function getComment(score) {
+            if (score >= 160) return '압도적인 실력!';
+            if (score >= 130) return '매우 우수한 실력!';
+            if (score >= 110) return '우수한 실력!';
+            if (score >= 90) return '평균 수준!';
+            if (score >= 70) return '평균 이하!';
+            if (score >= 45) return '더 많은 연습 필요!';
+            return '많은 연습이 필요!';
+        }
+
+        function calculateScore() {
+            // 가중치 가져오기
+            const weightWin = parseFloat(document.getElementById('weightWin').value) || 0;
+            const weightTop3 = parseFloat(document.getElementById('weightTop3').value) || 0;
+            const weightRP = parseFloat(document.getElementById('weightRP').value) || 0;
+            const weightRank = parseFloat(document.getElementById('weightRank').value) || 0;
+            const weightKill = parseFloat(document.getElementById('weightKill').value) || 0;
+            
+            // 가중치 합계 검증
+            const weightTotal = weightWin + weightTop3 + weightRP + weightRank + weightKill;
+            if (weightTotal !== 100) {
+                alert('가중치 합계가 100%가 되어야 합니다!');
+                return;
+            }
+
+            // 입력값 가져오기
+            const avgWinRate = parseFloat(document.getElementById('avgWinRate').value);
+            const avgTop3 = parseFloat(document.getElementById('avgTop3Rate').value);
+            const avgRP = parseFloat(document.getElementById('avgRP').value);
+            const avgRank = parseFloat(document.getElementById('avgRank').value);
+            const avgKills = parseFloat(document.getElementById('avgKills').value);
+            
+            const totalGames = parseFloat(document.getElementById('playerTotalGames').value);
+            const wins = parseFloat(document.getElementById('playerWins').value);
+            const top3 = parseFloat(document.getElementById('playerTop3').value);
+            const playerAvgRank = parseFloat(document.getElementById('playerAvgRank').value);
+            const totalRP = parseFloat(document.getElementById('playerTotalRP').value);
+            const playerAvgKills = parseFloat(document.getElementById('playerAvgKills').value);
+
+            // 검증
+            if (!avgWinRate || !avgTop3 || !avgRP || !avgRank || !avgKills || 
+                !totalGames || !wins || !top3 || !playerAvgRank || !totalRP || !playerAvgKills || 
+                totalGames === 0) {
+                alert('모든 항목을 입력해주세요!');
+                return;
+            }
+
+            // 플레이어 계산
+            const playerWinRate = (wins / totalGames) * 100;
+            const playerTop3Rate = (top3 / totalGames) * 100;
+            const playerAvgRP = totalRP / totalGames;
+
+            // 점수 계산 (평균 대비 백분율)
+            const winScore = Math.max(0, (playerWinRate / avgWinRate) * 100);
+            const top3Score = Math.max(0, (playerTop3Rate / avgTop3) * 100);
+            const rpScore = Math.max(0, (playerAvgRP / avgRP) * 100);
+            // 평균 순위는 낮을수록 좋으므로 역계산
+            const rankScore = Math.max(0, (avgRank / playerAvgRank) * 100);
+            const killScore = Math.max(0, (playerAvgKills / avgKills) * 100);
+            
+            // 가중치 적용 (입력받은 가중치 사용)
+            const totalScore = (winScore * weightWin / 100) + (top3Score * weightTop3 / 100) + 
+                             (rpScore * weightRP / 100) + (rankScore * weightRank / 100) + (killScore * weightKill / 100);
+
+            // 결과 표시
+            const gradeInfo = getGrade(totalScore);
+            
+            document.getElementById('gradeText').textContent = gradeInfo.grade;
+            document.getElementById('gradeText').className = `text-5xl font-bold ${gradeInfo.color}`;
+            document.getElementById('gradeComment').textContent = getComment(totalScore);
+            document.getElementById('totalScoreText').textContent = totalScore.toFixed(1) + '점';
+
+            // 기본 정보
+            const basicInfoHTML = `
+                <p>총 게임: <span class="font-semibold">${totalGames}판</span></p>
+                <p>승리: <span class="font-semibold">${wins}회</span></p>
+                <p>승률: <span class="font-semibold">${playerWinRate.toFixed(1)}%</span></p>
+                <p>TOP3: <span class="font-semibold">${top3}회 (${playerTop3Rate.toFixed(1)}%)</span></p>
+                <p>평균 순위: <span class="font-semibold">${playerAvgRank.toFixed(1)}등</span></p>
+                <p>판당 RP: <span class="font-semibold ${playerAvgRP >= 0 ? 'text-cyan-600' : 'text-red-600'}">${playerAvgRP >= 0 ? '+' : ''}${playerAvgRP.toFixed(1)}</span></p>
+                <p>평균 킬: <span class="font-semibold">${playerAvgKills.toFixed(2)}</span></p>
+            `;
+            document.getElementById('basicInfo').innerHTML = basicInfoHTML;
+
+            // 상세 점수
+            const detailScoresHTML = `
+                <p class="flex justify-between"><span>승률 점수:</span> <span class="font-bold text-cyan-700">${winScore.toFixed(1)}점 <span class="text-xs text-gray-500">(${weightWin}%)</span></span></p>
+                <p class="flex justify-between"><span>TOP3 점수:</span> <span class="font-bold text-cyan-700">${top3Score.toFixed(1)}점 <span class="text-xs text-gray-500">(${weightTop3}%)</span></span></p>
+                <p class="flex justify-between"><span>RP 점수:</span> <span class="font-bold text-cyan-700">${rpScore.toFixed(1)}점 <span class="text-xs text-gray-500">(${weightRP}%)</span></span></p>
+                <p class="flex justify-between"><span>순위 점수:</span> <span class="font-bold text-cyan-700">${rankScore.toFixed(1)}점 <span class="text-xs text-gray-500">(${weightRank}%)</span></span></p>
+                <p class="flex justify-between"><span>킬 점수:</span> <span class="font-bold text-cyan-700">${killScore.toFixed(1)}점 <span class="text-xs text-gray-500">(${weightKill}%)</span></span></p>
+                <p class="flex justify-between pt-2 mt-2 border-t border-gray-200"><span class="font-semibold">종합 점수:</span> <span class="font-bold text-blue-700">${totalScore.toFixed(1)}점</span></p>
+            `;
+            document.getElementById('detailScores').innerHTML = detailScoresHTML;
+
+            // 그래프 그리기
+            drawChart(winScore, top3Score, rpScore, rankScore, killScore, totalScore, 
+                     weightWin, weightTop3, weightRP, weightRank, weightKill);
+
+            // 결과 섹션 표시
+            document.getElementById('resultSection').classList.remove('hidden');
+        }
+
+        function drawChart(winScore, top3Score, rpScore, rankScore, killScore, totalScore,
+                          weightWin, weightTop3, weightRP, weightRank, weightKill) {
+            const ctx = document.getElementById('scoreChart').getContext('2d');
+            
+            // 기존 차트 제거
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: [`승률\n(${weightWin}%)`, `TOP3\n(${weightTop3}%)`, `RP\n(${weightRP}%)`, 
+                            `평균순위\n(${weightRank}%)`, `평균킬\n(${weightKill}%)`, '종합'],
+                    datasets: [
+                        {
+                            label: '평균',
+                            data: [100, 100, 100, 100, 100, 100],
+                            backgroundColor: '#94a3b8',
+                            borderRadius: 6
+                        },
+                        {
+                            label: '플레이어',
+                            data: [winScore, top3Score, rpScore, rankScore, killScore, totalScore],
+                            backgroundColor: '#0891b2',
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                boxWidth: 15,
+                                padding: 15,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + '점';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: Math.max(250, Math.max(winScore, top3Score, rpScore, rankScore, killScore, totalScore) + 50),
+                            grid: {
+                                color: '#e5e7eb'
+                            },
+                            ticks: {
+                                color: '#6b7280'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#6b7280',
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
